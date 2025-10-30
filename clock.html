@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang=“en”>
+<head>
+<meta charset=“utf-8” />
+<meta name=“viewport” content=“width=device-width,initial-scale=1” />
+<title>Digital Clock (4× Speed)</title>
+<style>
+  :root { —bg:#0b0f1a; —fg:#e6eef8; —dim:#8aa0b6; —glow:#00e0ff; }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; height:100vh; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(1200px 1200px at 50% 20%, #0f1629 0%, var(—bg) 60%, #05070d 100%);
+    color:var(—fg); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, “Liberation Mono”, monospace;
+  }
+  .card {
+    padding:28px 32px; border-radius:16px; background:#0c1324cc; backdrop-filter: blur(6px);
+    box-shadow: 0 10px 40px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.06);
+    text-align:center; min-width: 320px;
+  }
+  .time {
+    font-size: clamp(48px, 8vw, 96px);
+    letter-spacing: 0.06em; line-height:1;
+    text-shadow: 0 0 20px rgba(0,224,255,.35), 0 0 6px rgba(0,224,255,.3);
+  }
+  .ms { font-size: .35em; color: var(—dim); margin-left:.25em; letter-spacing: .08em; }
+  .date { margin-top:8px; color:var(—dim); font-size: 14px; }
+  .controls { margin-top:14px; display:flex; gap:10px; justify-content:center; align-items:center; }
+  button, .toggle {
+    padding:8px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.08);
+    background:#101a33; color:var(—fg); cursor:pointer; font-weight:600;
+  }
+  button:hover, .toggle:hover { filter:brightness(1.1); }
+  .hint { margin-top:8px; font-size:12px; color:#6e839a; }
+</style>
+</head>
+<body>
+  <div class=“card”>
+    <div class=“time” id=“time”>—:—:—<span class=“ms”>.— </span></div>
+    <div class=“date” id=“date”>Loading…</div>
+    <div class=“controls”>
+      <button id=“pauseBtn”>Pause</button>
+      <button id=“resetBtn”>Reset to now</button>
+      <button class=“toggle” id=“modeBtn”>24-hour</button>
+    </div>
+    <div class=“hint”>Clock runs at <strong>4×</strong> real time.</div>
+  </div>
+
+<script>
+  // -— Config -—
+  const SPEED = 4.0;  // 4× speed
+
+  // -— State -—
+  let simulated = new Date();
+  let lastReal = performance.now();
+  let running = true;
+  let is24h = true;
+
+  const timeEl = document.getElementById(‘time’);
+  const dateEl = document.getElementById(‘date’);
+  const pauseBtn = document.getElementById(‘pauseBtn’);
+  const resetBtn = document.getElementById(‘resetBtn’);
+  const modeBtn  = document.getElementById(‘modeBtn’);
+
+  function pad(n, w=2) { return n.toString().padStart(w,’0’); }
+
+  function formatTime(d) {
+    let h = d.getHours(), m = d.getMinutes(), s = d.getSeconds();
+    const ms = d.getMilliseconds();
+    let suffix = ‘’;
+    if (!is24h) {
+      suffix = h >= 12 ? ‘ PM’ : ‘ AM’;
+      h = h % 12 || 12;
+    }
+    return `${pad(h)}:${pad(m)}:${pad(s)}<span class=“ms”>.${pad(Math.floor(ms/10),3)}</span>${suffix}`;
+  }
+
+  function formatDate(d) {
+    // Example: Thu, 30 Oct 2025
+    return d.toLocaleDateString(undefined, { weekday:’short’, year:’numeric’, month:’short’, day:’2-digit’ });
+  }
+
+  function loop(now) {
+    const dt = now - lastReal; lastReal = now;
+    if (running) simulated = new Date(simulated.getTime() + dt * SPEED);
+
+    timeEl.innerHTML = formatTime(simulated);
+    dateEl.textContent = formatDate(simulated);
+
+    requestAnimationFrame(loop);
+  }
+
+  pauseBtn.addEventListener(‘click’, () => {
+    running = !running;
+    pauseBtn.textContent = running ? ‘Pause’ : ‘Play’;
+    lastReal = performance.now(); // prevent jump
+  });
+
+  resetBtn.addEventListener(‘click’, () => {
+    simulated = new Date();
+    running = true;
+    pauseBtn.textContent = ‘Pause’;
+    lastReal = performance.now();
+  });
+
+  modeBtn.addEventListener(‘click’, () => {
+    is24h = !is24h;
+    modeBtn.textContent = is24h ? ‘24-hour’ : ‘12-hour’;
+  });
+
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>

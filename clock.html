@@ -23,15 +23,12 @@
     text-shadow: 0 0 20px rgba(0,224,255,.35), 0 0 6px rgba(0,224,255,.3);
   }
   .ms { font-size: .35em; color: var(--dim); margin-left:.25em; letter-spacing: .08em; }
-  .date { margin-top:8px; color:var(--dim); font-size: 14px; }
-  .hint { margin-top:8px; font-size:12px; color:#6e839a; }
+  /* date/hint removed */
 </style>
 </head>
 <body>
   <div class="card">
     <div class="time" id="time">—:—:—<span class="ms">.— </span></div>
-    <div class="date" id="date">Loading…</div>
-    <div class="hint">Clock runs at <strong>4×</strong> real time.</div>
   </div>
 
 <script>
@@ -49,7 +46,6 @@
   let is24h = false; // Force 12-hour display
 
   const timeEl = document.getElementById('time');
-  const dateEl = document.getElementById('date');
   // No controls; purely display
 
   function pad(n, w=2) { return n.toString().padStart(w,'0'); }
@@ -65,17 +61,11 @@
     return `${pad(h)}:${pad(m)}:${pad(s)}<span class="ms">.${pad(ms,3)}</span>${suffix}`;
   }
 
-  function formatDate(d) {
-    // Example: Thu, 30 Oct 2025
-    return d.toLocaleDateString(undefined, { weekday:'short', year:'numeric', month:'short', day:'2-digit' });
-  }
-
   function loop(now) {
     const dt = now - lastReal; lastReal = now;
     simulated = new Date(simulated.getTime() + dt * SPEED);
 
     timeEl.innerHTML = formatTime(simulated);
-    dateEl.textContent = formatDate(simulated);
 
     requestAnimationFrame(loop);
   }
